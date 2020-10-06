@@ -248,7 +248,7 @@ def parse_model(d, ch):  # model_dict, input_channels(3)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--cfg', type=str, default='yolov5s.yaml', help='model.yaml')
+    parser.add_argument('--cfg', type=str, default='yolov5x.yaml', help='model.yaml')
     parser.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
     opt = parser.parse_args()
     opt.cfg = check_file(opt.cfg)  # check file
@@ -257,7 +257,26 @@ if __name__ == '__main__':
 
     # Create model
     model = Model(opt.cfg).to(device)
+    import pprint
+
+    pprint.pprint(model)
+    pprint.pprint([p for p in model.state_dict()])
+    ckpt = torch.load('/Users/ZGF/Desktop/notebooks/yolov5x.pt')
+    import pickle
+
+    inpt = torch.randn(5, 3, 512, 768)
+    otpt = inpt.clone()
+    model = ckpt['model'].float()
     model.train()
+    ret = [inpt.clone()]
+    for i in range(10):
+        otpt = model.model[i](otpt)
+        if i in [0, 2, 4, 6, 9]:
+            ret.append(otpt.clone().detach())
+    with open('/Users/ZGF/Desktop/notebooks/test_io_x.pkl', 'wb') as f:
+        pickle.dump(ret, f)
+    # with open('/Users/ZGF/Desktop/notebooks/yolov5m_sd.pt', 'wb') as f:
+    #     torch.save(ckpt['model'].float().state_dict(), f)
 
     # Profile
     # img = torch.rand(8 if torch.cuda.is_available() else 1, 3, 640, 640).to(device)
